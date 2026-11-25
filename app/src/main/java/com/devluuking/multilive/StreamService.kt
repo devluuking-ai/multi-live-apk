@@ -64,11 +64,19 @@ class StreamService : Service(), ConnectChecker {
 
     private fun startStreaming(resultCode: Int, data: Intent) {
         if (streaming) return
-        val dests = Prefs.destinations(this).filter { it.enabled && it.server.isNotBlank() && it.key.isNotBlank() }
+        var dests = Prefs.destinations(this).filter { it.enabled && it.server.isNotBlank() && it.key.isNotBlank() }
         if (dests.isEmpty()) {
             report("Stream key ထည့်ထားတဲ့ platform မရှိပါ — ⚙ Keys မှာ အရင်ထည့်ပါ")
             stopSelf()
             return
+        }
+        // Android 14+: one MediaProjection allows only ONE createVirtualDisplay() call, so
+        // per-destination ScreenSource instances cannot all capture from the same projection.
+        // v1 guard: stream to the first enabled platform only and say so plainly.
+        // TODO(v2): single capture feeding a fan-out to all destinations.
+        if (Build.VERSION.SDK_INT >= 34 && dests.size > 1) {
+            report("Android 14+ မှာ v1 က platform တစ်ခုပဲ လွှင့်နိုင်သေးသည် — ${dests.first().label} ကိုပဲ လွှင့်မည် (ကျန်တာတွေ v2 မှာ ရမည်)")
+            dests = listOf(dests.first())
         }
 
         startForegroundWithNotification()
