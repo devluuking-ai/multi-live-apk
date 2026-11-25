@@ -188,10 +188,10 @@ class MainActivity : AppCompatActivity() {
         stopChip.visibility = if (live) View.VISIBLE else View.GONE
         statusText.visibility = if (live) View.GONE else View.VISIBLE
         if (live) {
-            setImmersive(true)
+            applyImmersive(true)
         } else {
             showMode = false
-            setImmersive(false)
+            applyImmersive(false)
         }
     }
 
@@ -203,17 +203,17 @@ class MainActivity : AppCompatActivity() {
         controlBar.visibility = View.GONE
         statusText.visibility = View.GONE
         stopChip.visibility = View.GONE
-        setImmersive(true)
+        applyImmersive(true)
     }
 
     private fun exitShowMode() {
         showMode = false
         controlBar.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
-        setImmersive(false)
+        applyImmersive(false)
     }
 
-    private fun setImmersive(on: Boolean) {
+    private fun applyImmersive(on: Boolean) {
         WindowCompat.setDecorFitsSystemWindows(window, !on)
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         if (on) {
@@ -227,7 +227,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && (showMode || StreamService.streaming)) setImmersive(true)
+        if (hasFocus && (showMode || StreamService.streaming)) applyImmersive(true)
     }
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
