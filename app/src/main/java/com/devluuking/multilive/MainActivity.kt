@@ -19,6 +19,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -30,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var liveButton: Button
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+    private var showMode = false
 
     private val projectionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -88,6 +92,20 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.botsButton).setOnClickListener {
             webView.evaluateJavascript("window.toggleBots && toggleBots()", null)
+        }
+        findViewById<Button>(R.id.fullscreenButton).setOnClickListener { enterShowMode() }
+        webView.setOnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                when {
+                    showMode -> { exitShowMode(); true }
+                    StreamService.streaming -> {
+                        stopChip.visibility =
+                            if (stopChip.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                        true
+                    }
+                    else -> false
+                }
+            } else false
         }
 
         StreamService.statusListener = { msg ->
@@ -169,6 +187,47 @@ class MainActivity : AppCompatActivity() {
         controlBar.visibility = if (live) View.GONE else View.VISIBLE
         stopChip.visibility = if (live) View.VISIBLE else View.GONE
         statusText.visibility = if (live) View.GONE else View.VISIBLE
+        if (live) {
+            setImmersive(true)
+        } else {
+            showMode = false
+            setImmersive(false)
+        }
+    }
+
+    // Fullscreen "show mode" for TikTok Mobile gaming screen-share: the app's own
+    // Go Live never runs on that route, so without this the control bar, status
+    // text and system bars stay visible in the capture. Tap the scene to exit.
+    private fun enterShowMode() {
+        showMode = true
+        controlBar.visibility = View.GONE
+        statusText.visibility = View.GONE
+        stopChip.visibility = View.GONE
+        setImmersive(true)
+    }
+
+    private fun exitShowMode() {
+        showMode = false
+        controlBar.visibility = View.VISIBLE
+        statusText.visibility = View.VISIBLE
+        setImmersive(false)
+    }
+
+    private fun setImmersive(on: Boolean) {
+        WindowCompat.setDecorFitsSystemWindows(window, !on)
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        if (on) {
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && (showMode || StreamService.streaming)) setImmersive(true)
     }
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_LONG).show()

@@ -67,6 +67,13 @@
             android:text="🤖 Bots" />
 
         <Button
+            android:id="@+id/fullscreenButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:text="⛶ အပြည့်" />
+
+        <Button
             android:id="@+id/liveButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
