@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.devluuking.multilive"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.devluuking.multilive"
