@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         liveButton.setOnClickListener { onGoLive() }
-        stopChip.setOnClickListener { onStop() }
+        stopChip.setOnClickListener { stopLive() }
         findViewById<Button>(R.id.simChatButton).setOnClickListener {
             webView.evaluateJavascript("window.simChat && simChat()", null)
         }
@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         projectionLauncher.launch(mpm.createScreenCaptureIntent())
     }
 
-    private fun onStop() {
+    private fun stopLive() {
         val svc = Intent(this, StreamService::class.java).apply { action = StreamService.ACTION_STOP }
         startService(svc)
         setLiveUi(false)
