@@ -50,8 +50,11 @@ class MainActivity : AppCompatActivity() {
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { grants ->
-        if (grants[Manifest.permission.RECORD_AUDIO] == true) {
+    ) { _ ->
+        // Check the mic permission's current state, not just this request's result map:
+        // if only POST_NOTIFICATIONS was requested, RECORD_AUDIO is absent from the map
+        // even when already granted, which would wrongly block Go Live.
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             launchProjection()
         } else {
             toast("Microphone ခွင့်ပြုချက် လိုအပ်ပါသည်")
@@ -90,7 +93,14 @@ class MainActivity : AppCompatActivity() {
         StreamService.statusListener = { msg ->
             runOnUiThread {
                 statusText.text = msg
-                if (msg.startsWith("Live ရပ်")) setLiveUi(false)
+                if (msg.startsWith("Live ရပ်")) {
+                    setLiveUi(false)
+                } else if (msg.startsWith("❌") || msg.contains("ပြတ်သွားသည်")) {
+                    // Failure reasons must stay readable during a live session:
+                    // setLiveUi(true) hides the status bar, so show it again here
+                    // (the stream has failed, so nothing is being broadcast).
+                    statusText.visibility = View.VISIBLE
+                }
             }
         }
         setLiveUi(StreamService.streaming)
